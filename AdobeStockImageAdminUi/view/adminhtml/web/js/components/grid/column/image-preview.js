@@ -69,8 +69,14 @@ define([
                 record.series = ko.observable([]);
                 record.model = ko.observable([]);
             }
+
+            if (!record.selectedSeries) {
+                record.selectedSeries = ko.observable(null);
+            }
+
             record.keywordsLimit = ko.observable(this.keywordsLimit);
             record.canViewMoreKeywords = ko.observable(true);
+            record.selectedSeries(null);
         },
 
         /**
@@ -93,11 +99,43 @@ define([
          * @inheritDoc
          */
         show: function(record) {
+            console.log([1, record]);
             this._initRecord(record);
+
             this.hideAllKeywords(record);
             this._super(record);
             this.loadRelatedImages(record);
             this._updateHeight();
+            console.log([2, record]);
+            debugger;
+        },
+
+        /**
+         *
+         */
+        nextSeries: function (currentSeries, record) {
+            var seriesList = record.series(),
+                nextSeries = _.findLastIndex(seriesList, {id: currentSeries.id}) + 1;
+
+            if (typeof seriesList[nextSeries] === 'undefined') {
+                return;
+            }
+
+            this.switchImagePreviewToSeriesImage(seriesList[nextSeries], record);
+        },
+
+        /**
+         *
+         */
+        prevSeries: function (currentSeries, record) {
+            var seriesList = record.series(),
+                prevSeries = _.findLastIndex(seriesList, {id: currentSeries.id}) - 1;
+
+            if (typeof seriesList[prevSeries] === 'undefined') {
+                return;
+            }
+
+            this.switchImagePreviewToSeriesImage(seriesList[prevSeries], record);
         },
 
         /**
@@ -515,6 +553,34 @@ define([
                 .finally((function () {
                     messages.scheduleCleanup(this.messageDelay);
                 }).bind(this));
+        },
+
+        /**
+         * Switch image preview to series image
+         *
+         * @param {Object} series
+         * @param {Object} record
+         *
+         * @return {void}
+         */
+        switchImagePreviewToSeriesImage: function (series, record) {
+            if (!series) {
+                record.selectedSeries(null);
+
+                return;
+            }
+
+            if (!record.selectedSeries()) {
+                record.selectedSeries(series);
+
+                return;
+            }
+
+            if (record.selectedSeries().id === series.id) {
+                return;
+            }
+
+            record.selectedSeries(series);
         }
     });
 });

@@ -7,7 +7,7 @@
 -->
 <div class="masonry-image-preview" if="$col.isVisible($row())" data-image-preview ko-style="$col.getStyles($row())">
     <div class="container">
-        <div class="action-buttons">
+        <div class="action-buttons" if="!$row().selectedSeries()">
             <button class="action-previous" type="button" data-bind="click: function () { $col.prev($row()); }">
                 <span translate="'Previous'"/>
             </button>
@@ -18,8 +18,20 @@
                 <span translate="'Close'"/>
             </button>
         </div>
-        <img class="preview" attr="src: $col.getUrl($row()), alt: $col.getTitle($row())">
-        <div class="info">
+        <div class="action-buttons" if="$row().selectedSeries()">
+            <button class="action-previous" type="button" data-bind="click: function () { $col.prevSeries($row().selectedSeries(), $row()); }">
+                <span translate="'Previous'"/>
+            </button>
+            <button class="action-next" type="button" data-bind="click: function () { $col.nextSeries($row().selectedSeries(), $row()); }">
+                <span translate="'Next'"/>
+            </button>
+            <button class="action-close" type="button" data-bind="click: function () { $col.switchImagePreviewToSeriesImage(null, $row()); }">
+                <span translate="'Close'"/>
+            </button>
+        </div>
+        <img class="preview" if="!$row().selectedSeries()" attr="src: $col.getUrl($row()), alt: $col.getTitle($row())">
+        <img class="preview" if="$row().selectedSeries()" attr="src: $col.getUrl($row().selectedSeries()), alt: $col.getTitle($row().selectedSeries())">
+        <div class="info" if="!$row().selectedSeries()">
             <h3 class="title" text="$col.getTitle($row())" if="$col.getTitle($row())"/>
             <div class="author" if="$col.getAuthor($row())">
                 <span translate="'By'" /><span text="' ' + $col.getAuthor($row())" />
@@ -45,7 +57,33 @@
                 <span translate="'License and Save'"></span>
             </button>
         </div>
-        <div class="attributes" data-role="image-attributes-value">
+        <div class="info" if="$row().selectedSeries()">
+            <h3 class="title" text="$col.getTitle($row().selectedSeries())" if="$col.getTitle($row().selectedSeries())"/>
+            <div class="author" if="$col.getAuthor($row().selectedSeries())">
+                <span translate="'By'" /><span text="' ' + $col.getAuthor($row().selectedSeries())" />
+            </div>
+            <ul class="messages" if="$col.getMessages().length > 0">
+                <!-- ko foreach: $col.getMessages() -->
+                <div class="messages">
+                    <div attr="class: 'message message-'+code">
+                        <div data-ui-id="messages-message-error">
+                            <span data-bind="html: message"></span>
+                        </div>
+                    </div>
+                </div>
+                <!-- /ko -->
+            </ul>
+            <button class="action-secondary" type="button" data-bind="click: function(){ $col.savePreview($row()) }">
+                <span translate="'Save Preview'"/>
+            </button>
+            <button class="action-default primary"
+                    type="button"
+                    attr="title: $t('License and Save')"
+                    data-bind="click: function () { $col.licenseProcess($row()); }">
+                <span translate="'License and Save'"></span>
+            </button>
+        </div>
+        <div class="attributes" if="!$row().selectedSeries()" data-role="image-attributes-value">
             <!-- ko foreach: $col.getDisplayAttributes($row()) -->
             <div class="attribute">
                 <span class="title" translate="name"/>
@@ -55,10 +93,33 @@
             </div>
             <!-- /ko -->
         </div>
-        <div class="keywords">
+        <div class="attributes" if="$row().selectedSeries()" data-role="image-attributes-value">
+            <!-- ko foreach: $col.getDisplayAttributes($row().selectedSeries()) -->
+            <div class="attribute">
+                <span class="title" translate="name"/>
+                <div class="value">
+                    <span text="value" />
+                </div>
+            </div>
+            <!-- /ko -->
+        </div>
+        <div class="keywords" if="!$row().selectedSeries()">
             <div class="title" translate="'Similar Keywords'"></div>
             <!-- ko foreach: $col.getKeywords($row()) -->
             <div class="keyword" data-bind="css: { 'hide': $index() >= $col.getKeywordsLimit($row())}">
+                <a href="" class="value" data-bind="click: function(){ $col.searchByKeyWord(name) }">
+                    <span text="name"/>
+                </a>
+            </div>
+            <!-- /ko -->
+            <button data-bind="visible: $col.canViewMoreKeywords($row()), click: function(){ $col.viewAllKeywords($row()) }">
+                <span translate="'View all'"/>
+            </button>
+        </div>
+        <div class="keywords" if="$row().selectedSeries()">
+            <div class="title" translate="'Similar Keywords'"></div>
+            <!-- ko foreach: $col.getKeywords($row().selectedSeries()) -->
+            <div class="keyword" data-bind="css: { 'hide': $index() >= $col.getKeywordsLimit($row().selectedSeries())}">
                 <a href="" class="value" data-bind="click: function(){ $col.searchByKeyWord(name) }">
                     <span text="name"/>
                 </a>
@@ -92,7 +153,7 @@
         <div id="adobe-stock-tabs-content" class="adobe-stock-related-images-tab-content">
             <div attr="'id': 'series_content_' + $row().id">
                 <!-- ko foreach: $col.getSeries($row()) -->
-                <div class="thumbnail">
+                <div class="thumbnail" data-bind="click: function(){ $col.switchImagePreviewToSeriesImage($data, $row()) }">
                     <img attr="src: thumbnail_url, alt: title">
                 </div>
                 <!-- /ko -->
